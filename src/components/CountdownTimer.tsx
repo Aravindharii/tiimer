@@ -3,57 +3,64 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check } from "lucide-react";
-import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
+import {
+    differenceInDays,
+    differenceInHours,
+    differenceInMinutes,
+    differenceInSeconds,
+} from "date-fns";
 
-// Arrival time in COK is April 11, 2026 at 02:45 AM IST (+05:30)
-// To ensure it triggers exactly at local time, we specify the timezone offset.
-const TARGET_DATE = new Date("2026-04-10T21:15:00Z"); // 02:45 IST in UTC 
+// 🇨🇦 QR 768: Departs YYZ — Thu, Apr 09 2026 at 21:00 ET (EDT = UTC-4)
+const DEPARTURE_DATE = new Date("2026-04-10T01:00:00Z");
 
-export default function CountdownTimer({ onComplete }: { onComplete: () => void }) {
-    const [mounted, setMounted] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const [timeLeft, setTimeLeft] = useState({
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-        total: 1 // Start > 0 to prevent immediate complete
-    });
+// 🇮🇳 QR 516: Arrives COK — Sat, Apr 11 2026 at 02:45 IST (UTC+5:30)
+const ARRIVAL_DATE = new Date("2026-04-10T21:15:00Z");
 
-    useEffect(() => {
-        setMounted(true);
+type TimeLeft = {
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    total: number;
+};
 
-        const calculateTimeLeft = () => {
-            const now = new Date();
-            const totalSeconds = differenceInSeconds(TARGET_DATE, now);
+function calculateTimeLeft(target: Date): TimeLeft {
+    const now = new Date();
+    const totalSeconds = differenceInSeconds(target, now);
 
-            if (totalSeconds <= 0) {
-                onComplete();
-                return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
-            }
+    if (totalSeconds <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
+    }
 
-            // precise modulo calculation
-            const days = differenceInDays(TARGET_DATE, now);
-            const hours = differenceInHours(TARGET_DATE, now) % 24;
-            const minutes = differenceInMinutes(TARGET_DATE, now) % 60;
-            const seconds = totalSeconds % 60;
+    const days = differenceInDays(target, now);
+    const hours = differenceInHours(target, now) % 24;
+    const minutes = differenceInMinutes(target, now) % 60;
+    const seconds = totalSeconds % 60;
 
-            return { days, hours, minutes, seconds, total: totalSeconds };
-        };
+    return { days, hours, minutes, seconds, total: totalSeconds };
+}
 
-        setTimeLeft(calculateTimeLeft());
-
-        const timer = setInterval(() => {
-            setTimeLeft(calculateTimeLeft());
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [onComplete]);
-
-    if (!mounted) return null; // Avoid hydration mismatch
-
-    if (timeLeft.total <= 0) return null;
-
+function TimerBlock({
+    timeLeft,
+    targetDate,
+    timezone,
+    label,
+    flagEmoji,
+    accentClass,
+    borderGlow,
+    glowColor,
+    sublabel,
+}: {
+    timeLeft: TimeLeft;
+    targetDate: Date;
+    timezone: string;
+    label: string;
+    flagEmoji: string;
+    accentClass: string;
+    borderGlow: string;
+    glowColor: string;
+    sublabel: string;
+}) {
     const timeBlocks = [
         { label: "Days", value: timeLeft.days },
         { label: "Hours", value: timeLeft.hours },
@@ -61,46 +68,38 @@ export default function CountdownTimer({ onComplete }: { onComplete: () => void 
         { label: "Seconds", value: timeLeft.seconds },
     ];
 
-    const handleCopy = async () => {
-        const textToCopy = `${timeLeft.days} Days, ${timeLeft.hours} Hours, ${timeLeft.minutes} Minutes, ${timeLeft.seconds} Seconds remaining!`;
-
-        try {
-            if (navigator?.clipboard?.writeText) {
-                await navigator.clipboard.writeText(textToCopy);
-            } else {
-                // Fallback for older browsers or non-secure contexts (e.g., local network IP testing)
-                const textArea = document.createElement("textarea");
-                textArea.value = textToCopy;
-
-                // Avoid scrolling to bottom
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-            console.error('Failed to copy text: ', err);
-        }
-    };
+    const formattedTime = new Intl.DateTimeFormat(undefined, {
+        timeZone: timezone,
+        month: "short",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZoneName: "short",
+    }).format(targetDate);
 
     return (
-        <div className="flex flex-col items-center mt-12 z-10 relative gap-8">
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 bg-black/40 p-8 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl relative">
-                <div className="absolute inset-0 bg-blue-500/10 rounded-3xl blur-xl" />
+        <div className="flex flex-col items-center gap-4">
+            {/* Header */}
+            <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2">
+                    <span className="text-2xl">{flagEmoji}</span>
+                    <span className={`text-sm font-semibold tracking-widest uppercase ${accentClass}`}>
+                        {label}
+                    </span>
+                </div>
+                <span className="text-xs text-slate-500 tracking-wide">{sublabel}</span>
+            </div>
+
+            {/* Digit Blocks */}
+            <div
+                className={`flex flex-wrap items-center justify-center gap-3 sm:gap-5 bg-black/40 p-5 sm:p-7 rounded-3xl backdrop-blur-md border ${borderGlow} shadow-2xl relative`}
+            >
+                <div className={`absolute inset-0 rounded-3xl blur-xl opacity-15 ${glowColor}`} />
                 {timeBlocks.map((block) => (
                     <div key={block.label} className="flex flex-col items-center">
-                        <div className="relative w-20 h-24 sm:w-28 sm:h-32 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] neon-border overflow-hidden">
-                            {/* Glossy overlay */}
+                        <div className="relative w-[72px] h-[88px] sm:w-24 sm:h-28 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.2)]">
                             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-
                             <AnimatePresence mode="popLayout">
                                 <motion.span
                                     key={block.value}
@@ -108,19 +107,138 @@ export default function CountdownTimer({ onComplete }: { onComplete: () => void 
                                     animate={{ y: 0, opacity: 1, scale: 1 }}
                                     exit={{ y: -20, opacity: 0, scale: 0.8 }}
                                     transition={{ duration: 0.3, type: "spring" }}
-                                    className="text-4xl sm:text-6xl font-bold neon-text text-blue-100 font-mono tracking-tighter"
+                                    className={`text-3xl sm:text-5xl font-bold font-mono tracking-tighter ${accentClass}`}
                                 >
                                     {block.value.toString().padStart(2, "0")}
                                 </motion.span>
                             </AnimatePresence>
                         </div>
-                        <span className="mt-3 text-sm sm:text-base text-blue-200 font-light tracking-widest uppercase">
+                        <span className={`mt-2 text-xs sm:text-sm font-light tracking-widest uppercase ${accentClass} opacity-70`}>
                             {block.label}
                         </span>
                     </div>
                 ))}
             </div>
 
+            {/* Formatted Target Time */}
+            <p className={`text-xs sm:text-sm tracking-wide ${accentClass} opacity-60`}>
+                <span className="font-medium">Target:</span>{" "}
+                <span className="whitespace-nowrap">{formattedTime}</span>
+            </p>
+        </div>
+    );
+}
+
+export default function CountdownTimer({ onComplete }: { onComplete: () => void }) {
+    const [mounted, setMounted] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    // 🇨🇦 Counts down to YYZ departure — Apr 9, 21:00 ET
+    const [canadaTimeLeft, setCanadaTimeLeft] = useState<TimeLeft>({
+        days: 0, hours: 0, minutes: 0, seconds: 0, total: 1,
+    });
+
+    // 🇮🇳 Counts down to COK arrival — Apr 11, 02:45 IST
+    const [indiaTimeLeft, setIndiaTimeLeft] = useState<TimeLeft>({
+        days: 0, hours: 0, minutes: 0, seconds: 0, total: 1,
+    });
+
+    useEffect(() => {
+        setMounted(true);
+        setCanadaTimeLeft(calculateTimeLeft(DEPARTURE_DATE));
+        setIndiaTimeLeft(calculateTimeLeft(ARRIVAL_DATE));
+
+        const timer = setInterval(() => {
+            const canada = calculateTimeLeft(DEPARTURE_DATE);
+            const india = calculateTimeLeft(ARRIVAL_DATE);
+            setCanadaTimeLeft(canada);
+            setIndiaTimeLeft(india);
+
+            if (india.total <= 0) {
+                onComplete();
+                clearInterval(timer);
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [onComplete]);
+
+    if (!mounted) return null;
+    if (indiaTimeLeft.total <= 0) return null;
+
+    const handleCopy = async () => {
+        const textToCopy =
+            `🇨🇦 Departure in: ${canadaTimeLeft.days}d ${canadaTimeLeft.hours}h ${canadaTimeLeft.minutes}m ${canadaTimeLeft.seconds}s\n` +
+            `🇮🇳 Arrival in:   ${indiaTimeLeft.days}d ${indiaTimeLeft.hours}h ${indiaTimeLeft.minutes}m ${indiaTimeLeft.seconds}s`;
+
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(textToCopy);
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                textArea.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Failed to copy:", err);
+        }
+    };
+
+    return (
+        <div className="flex flex-col items-center mt-12 z-10 relative gap-12">
+
+            {/* ── Two Timers ── */}
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 w-full">
+
+                {/* 🇨🇦 Canada — Departure Apr 9, 21:00 ET */}
+                <TimerBlock
+                    timeLeft={canadaTimeLeft}
+                    targetDate={DEPARTURE_DATE}
+                    timezone="America/Toronto"
+                    label="Canada — Departure"
+                    flagEmoji="🇨🇦"
+                    sublabel="QR 768 · Apr 09 · 21:00 ET · YYZ"
+                    accentClass="text-red-200"
+                    borderGlow="border-red-500/20"
+                    glowColor="bg-red-500"
+                />
+
+                {/* Vertical Divider */}
+                <div className="hidden lg:flex flex-col items-center gap-3 text-white/20 select-none">
+                    <div className="w-px h-36 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                    <span className="text-lg">✈️</span>
+                    <div className="w-px h-36 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                </div>
+
+                {/* Mobile Divider */}
+                <div className="flex lg:hidden items-center gap-3 w-full max-w-xs">
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <span className="text-lg">✈️</span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+
+                {/* 🇮🇳 India — Arrival Apr 11, 02:45 IST */}
+                <TimerBlock
+                    timeLeft={indiaTimeLeft}
+                    targetDate={ARRIVAL_DATE}
+                    timezone="Asia/Kolkata"
+                    label="India — Arrival"
+                    flagEmoji="🇮🇳"
+                    sublabel="QR 516 · Apr 11 · 02:45 IST · COK"
+                    accentClass="text-blue-100"
+                    borderGlow="border-white/10"
+                    glowColor="bg-blue-500"
+                />
+            </div>
+
+            {/* ── Copy Button ── */}
             <button
                 onClick={handleCopy}
                 className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full backdrop-blur-md transition-all text-blue-100 font-medium tracking-wide shadow-lg group cursor-pointer"
@@ -133,7 +251,7 @@ export default function CountdownTimer({ onComplete }: { onComplete: () => void 
                 ) : (
                     <>
                         <Copy className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        <span>Copy Timer</span>
+                        <span>Copy Timers</span>
                     </>
                 )}
             </button>

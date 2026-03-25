@@ -10,8 +10,9 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "flight_iata required" }, { status: 400 });
     }
 
-    const url = `https://aerodatabox.p.rapidapi.com/flights/iata/${flightIata}`;
-
+    const today = new Date().toISOString().split("T")[0]; // "2026-03-25"
+// ✅ CORRECT — searchBy is "number", not "iata"
+const url = `https://aerodatabox.p.rapidapi.com/flights/number/${flightIata}`;
     try {
         const res = await fetch(url, {
             headers: {
@@ -21,14 +22,16 @@ export async function GET(req: NextRequest) {
             next: { revalidate: 60 },
         });
 
+        const raw = await res.text();
+
         if (!res.ok) {
             return NextResponse.json(
-                { error: "Flight not found or not active yet." },
+                { error: "Flight not found or not active yet.", detail: raw },
                 { status: res.status }
             );
         }
 
-        const data = await res.json();
+        const data = JSON.parse(raw);
         return NextResponse.json({ data: Array.isArray(data) ? data : [data] });
     } catch {
         return NextResponse.json(

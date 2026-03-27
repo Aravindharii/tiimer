@@ -38,42 +38,40 @@ interface FlightSegment {
 
 const FLIGHTS: FlightSegment[] = [
     {
-        airline: "Qatar Airways",
-        flightNumber: "QR 768",
-        flightIata: "QR768",
-        aircraft: "Airbus A350-1000",
-        class: "Economy(N)",
+        airline: "Emirates",
+        flightNumber: "EK 242",
+        flightIata: "EK242",
+        aircraft: "Airbus A380-800",
+        class: "Economy / Saver",
         departure: {
-            time: "21:00",
+            time: "14:55",
             date: "Thu, 09 Apr 2026",
             airport: "YYZ",
-            terminal: "3",
         },
         arrival: {
-            time: "16:35 (+1)",
+            time: "12:40 (+1)",
             date: "Fri, 10 Apr 2026",
-            airport: "DOH",
+            airport: "DXB",
         },
-        duration: "12h 35m",
+        duration: "13h 45m",
     },
     {
-        airline: "Qatar Airways",
-        flightNumber: "QR 516",
-        flightIata: "QR516",
-        aircraft: "Airbus A330-300",
-        class: "Economy(N)",
+        airline: "Emirates",
+        flightNumber: "EK 532",
+        flightIata: "EK532",
+        aircraft: "Boeing 777-300ER",
+        class: "Economy / Saver",
         departure: {
-            time: "20:00",
+            time: "21:25",
             date: "Fri, 10 Apr 2026",
-            airport: "DOH",
+            airport: "DXB",
         },
         arrival: {
-            time: "02:45 (+1)",
+            time: "02:55 (+1)",
             date: "Sat, 11 Apr 2026",
             airport: "COK",
-            terminal: "3",
         },
-        duration: "04h 15m",
+        duration: "04h 00m",
     },
 ];
 
@@ -535,16 +533,16 @@ export default function FlightTracker() {
                     <div className="flex items-center justify-center -mt-2 mb-4">
                         <div className="bg-slate-800/80 border border-slate-700/50 px-6 py-2 rounded-full text-sm text-slate-300 font-medium flex items-center gap-2 shadow-lg z-20">
                             <Clock className="w-4 h-4 text-blue-400" />
-                            Connection Time in DOH: 03h 25m
+                            Connection Time in DXB: 08h 45m
                         </div>
                     </div>
                 )}
 
                 {/* Footer */}
                 <div className="mt-8 text-center text-slate-500 text-sm flex gap-4 justify-center items-center flex-wrap">
-                    <span>Total journey: 20h 15m</span>
+                    <span>Total journey: 26h 30m</span>
                     <span>•</span>
-                    <span>Checked-in: 2 Piece(s), up to 23 kg each</span>
+                    <span>Route: YYZ → DXB → COK</span>
                     <span>•</span>
                     <span className="flex items-center gap-1">
                         <Wifi className="w-3 h-3 text-blue-400" />

@@ -10,11 +10,11 @@ import {
     differenceInSeconds,
 } from "date-fns";
 
-// 🇨🇦 QR 768: Departs YYZ — Thu, Apr 09 2026 at 21:00 ET (EDT = UTC-4)
-const DEPARTURE_DATE = new Date("2026-04-10T01:00:00Z");
+// ✈️ EK 242: Departs YYZ — Thu, Apr 09 2026 at 14:55 ET (EDT = UTC-4)
+const DEPARTURE_DATE = new Date("2026-04-09T18:55:00Z");
 
-// 🇮🇳 QR 516: Arrives COK — Sat, Apr 11 2026 at 02:45 IST (UTC+5:30)
-const ARRIVAL_DATE = new Date("2026-04-10T21:15:00Z");
+// ✈️ EK 532: Arrives COK — Sat, Apr 11 2026 at 02:55 IST (UTC+5:30)
+const ARRIVAL_DATE = new Date("2026-04-10T21:25:00Z");
 
 type TimeLeft = {
     days: number;
@@ -133,12 +133,12 @@ export default function CountdownTimer({ onComplete }: { onComplete: () => void 
     const [mounted, setMounted] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    // 🇨🇦 Counts down to YYZ departure — Apr 9, 21:00 ET
+    // 🇨🇦 Counts down to YYZ departure — Apr 9, 14:55 ET
     const [canadaTimeLeft, setCanadaTimeLeft] = useState<TimeLeft>({
         days: 0, hours: 0, minutes: 0, seconds: 0, total: 1,
     });
 
-    // 🇮🇳 Counts down to COK arrival — Apr 11, 02:45 IST
+    // 🇮🇳 Counts down to COK arrival — Apr 11, 02:55 IST
     const [indiaTimeLeft, setIndiaTimeLeft] = useState<TimeLeft>({
         days: 0, hours: 0, minutes: 0, seconds: 0, total: 1,
     });
@@ -197,14 +197,14 @@ export default function CountdownTimer({ onComplete }: { onComplete: () => void 
             {/* ── Two Timers ── */}
             <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 w-full">
 
-                {/* 🇨🇦 Canada — Departure Apr 9, 21:00 ET */}
+                {/* 🇨🇦 Canada — Departure Apr 9, 14:55 ET */}
                 <TimerBlock
                     timeLeft={canadaTimeLeft}
                     targetDate={DEPARTURE_DATE}
                     timezone="America/Toronto"
                     label="Canada — Departure"
                     flagEmoji="🇨🇦"
-                    sublabel="QR 768 · Apr 09 · 21:00 ET · YYZ"
+                    sublabel="EK 242 · Apr 09 · 14:55 ET · YYZ"
                     accentClass="text-red-200"
                     borderGlow="border-red-500/20"
                     glowColor="bg-red-500"
@@ -224,14 +224,14 @@ export default function CountdownTimer({ onComplete }: { onComplete: () => void 
                     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </div>
 
-                {/* 🇮🇳 India — Arrival Apr 11, 02:45 IST */}
+                {/* 🇮🇳 India — Arrival Apr 11, 02:55 IST */}
                 <TimerBlock
                     timeLeft={indiaTimeLeft}
                     targetDate={ARRIVAL_DATE}
                     timezone="Asia/Kolkata"
                     label="India — Arrival"
                     flagEmoji="🇮🇳"
-                    sublabel="QR 516 · Apr 11 · 02:45 IST · COK"
+                    sublabel="EK 532 · Apr 11 · 02:55 IST · COK"
                     accentClass="text-blue-100"
                     borderGlow="border-white/10"
                     glowColor="bg-blue-500"
